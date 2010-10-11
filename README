@@ -1,0 +1,62 @@
+
+Ōku no hitto ("many hits" in Japanese) is an experiment to figure out how best to saturate a HTTP pipe under the following conditions:
+* A constant throughput is desirable over varying throughput.
+* Network latency is expected
+* Response time is large, at least 7 seconds, and possibly more.
+
+Pre-requisites:
+* Make sure open files on your system isn't low. On OSX, use sysctl to tweak kern.maxfiles and kern.maxfilesperproc
+
+
+Ōku no hitto simulator:
+
+Depends on:
+* Ruby 1.8.7
+* Thin rubygem
+* async_sinatra rubygem
+
+Steps to run:
+* thin -R config.ru -p 3000 start
+
+
+Ōku no hitto thread_test.rb:
+
+Depends on:
+* JRuby 1.5.3
+
+Steps to run:
+~ Run the simulator
+~ jruby -J-Xmx1024m threadpool_test.rb 
+
+Interesting variables to tweak:
+Currently all variables are within the threadpool_test.rb file:
+* under def long_process:
+	* host - of the simulator
+	* port - of the simulator
+* under invoker:
+	* throughput - the intended throughput
+* under top:
+	* poll_delay - the delay to poll status
+	
+	
+Ōku no hitto threadpool_test.rb:
+Everything under thread_test.rb plus:
+Interesting variables to tweak:
+* under invoker:
+	* threadpool_size - the size of the threadpool
+	
+How to interpret stats:
+
+T: 6095 F: 5163 W: 932 CE: 0 FE: 0 IT (req/s): 80 FT (req/s): 84
+
+T -> total requests
+F -> finished requests
+W -> waiting requests = T - F
+CE -> connection errors
+FE -> fatal errors
+IT -> invoke throughput (dependent on invoker)
+FT -> finish throughput (dependent on simulator)
+
+
+
+
