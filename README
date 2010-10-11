@@ -17,6 +17,10 @@ Depends on:
 
 Steps to run:
 * thin -R config.ru -p 3000 start
+or for robustness:
+* thin -R config.ru -p 3001 -s 3
+- and then use simulator/nginx.conf or simulator/haproxy.conf to front.
+- There's also a crude random client side load balancer in threadpool_test, under long_process
 
 
 Ōku no hitto thread_test.rb:
@@ -47,7 +51,7 @@ Interesting variables to tweak:
 	
 How to interpret stats:
 
-T: 6095 F: 5163 W: 932 CE: 0 FE: 0 IT (req/s): 80 FT (req/s): 84
+T: 12318 F: 10668 W: 1650 CE: 0 FE: 0 IT (req/s): 160 FT (req/s): 171
 
 T -> total requests
 F -> finished requests

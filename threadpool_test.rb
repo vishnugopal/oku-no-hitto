@@ -4,9 +4,20 @@ require 'threadpool'
 
 $STATE = java.util.concurrent.ConcurrentHashMap.new
 
-def long_process
+def dummy_long_process
+  delay = 7 + (rand * 10).to_i
+  sleep delay
+end
+
+def long_process(dummy = false, client_side_loadbalancing = false)
+  dummy_long_process and return if dummy
+  
   host = 'localhost'
-  port = '3000'
+  if client_side_loadbalancing
+    port = "300#{1 + (rand * 3).to_i}"
+  else
+    port = "3000"
+  end
   
   open("http://#{host}:#{port}/") do |f|
     f.read
@@ -14,8 +25,8 @@ def long_process
 end
 
 invoker = Thread.new do
-  throughput = 100
-  threadpool_size = 1500
+  throughput = 160
+  threadpool_size = 2000
   
   $STATE['errors'] = java.util.concurrent.ConcurrentHashMap.new
   
@@ -23,10 +34,10 @@ invoker = Thread.new do
   $STATE['errors']['fatal'] = 0
   
   begin
-    pool = ThreadPool.new(threadpool_size)
+    pool = java.util.concurrent.Executors.newFixedThreadPool(threadpool_size)
     loop do
       throughput.times do
-        pool.process do
+        pool.execute do
           begin
             thread_id = "#{Time.now.to_i}#{Thread.current.inspect.split(':')[-1][0..9]}"
             $STATE[thread_id] ||= java.util.concurrent.ConcurrentHashMap.new
@@ -41,7 +52,7 @@ invoker = Thread.new do
             $STATE['errors']['connection'] += 1
             redo
           rescue
-            puts "Error in individual thread: #{thread_id} #{$STATE[thread_id].inspect.to_s} ", $!
+            print "Error in individual thread: #{thread_id}", $!, "\n"
             $STATE['errors']['fatal'] += 1
           end
         end
